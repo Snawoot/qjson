@@ -1,36 +1,9 @@
-package main
+package qjson
 
 import (
     "fmt"
-    "encoding/json"
     "errors"
-    "time"
 )
-
-var EXAMPLE = []byte(`
-{
-    "glossary": {
-        "title": "example glossary",
-        "GlossDiv": {
-            "title": "S",
-            "GlossList": {
-                "GlossEntry": {
-                    "ID": "SGML",
-                    "SortAs": "SGML",
-                    "GlossTerm": "Standard Generalized Markup Language",
-                    "Acronym": "SGML",
-                    "Abbrev": "ISO 8879:1986",
-                    "GlossDef": {
-                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
-                        "GlossSeeAlso": ["GML", "XML"]
-                    },
-                    "GlossSee": "markup"
-                }
-            }
-        }
-    }
-}
-`)
 
 type SliceResizeNeeded uint64
 
@@ -208,55 +181,15 @@ func U(V *interface{}, keys ...interface{}) (interface{}, error) {
             *V = tree
             return nil, err
         }
-        return u(*V, keys...)
-    }
-}
-
-func PrintJson(j interface{}) error {
-    json, err := json.MarshalIndent(j, "", "    ")
-    if err != nil {
-        return err
-    }
-    _, err = fmt.Println(string(json))
-    return err
-}
-
-func main() {
-    var j interface{}
-    err := json.Unmarshal(EXAMPLE, &j)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println("Example JSON:")
-    err = PrintJson(j)
-
-    // Query some JSON paths
-    // Invocation: Q(object {}interface, path... interface{}, newvalue interface{})
-    // Returns value and error
-    fmt.Println("")
-    fmt.Println("Queries:")
-    fmt.Println(`Q(j, "glossary", "title") ->`)
-    fmt.Println(Q(j, "glossary", "title"))
-    fmt.Println(`Q(j, "glossary", "non-existent-key") ->`)
-    fmt.Println(Q(j, "glossary", "non-existent-key"))
-    fmt.Println(`Q(j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1) ->`)
-    fmt.Println(Q(j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1))
-
-    // Apply some changes to JSON
-    // Invocation: U(object {}interface, path... interface{}, newvalue interface{})
-    // Returns old value and error
-    fmt.Println("")
-    fmt.Println("Updates:")
-    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC") -> `)
-    fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC"))
-    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()) -> `)
-    fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()))
-    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF") -> `)
-    fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF"))
-
-    fmt.Println("Edited JSON:")
-    err = PrintJson(j)
-    if err != nil {
-        panic(err)
+        res, err := u(*V, keys...)
+        if size, ok := err.(SliceResizeNeeded) ; ok {
+            // Handle slice resize
+            newslice := make([]interface{}, size)
+            copy(newslice, (*V).([]interface{}))
+            *V = newslice
+            // Retry with resized array
+            return u(*V, keys...)
+        }
+        return res, err
     }
 }
