@@ -155,11 +155,11 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
         if !ok {
             return nil, errors.New("Container type mismatch")
         }
+        if k >= len(a) {
+            return nil, NewSliceResizeNeeded(uint64(k + 1))
+        }
         if l == 2 {
             // Reached path destination
-            if k >= len(a) {
-                return nil, NewSliceResizeNeeded(uint64(k + 1))
-            }
             old := a[k]
             a[k] = keys[1]
             return old, nil
