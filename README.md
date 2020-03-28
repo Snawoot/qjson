@@ -71,8 +71,8 @@ func main() {
     fmt.Println("Updates:")
     fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC") -> `)
     fmt.Println(qjson.U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC"))
-    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()) -> `)
-    fmt.Println(qjson.U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()))
+    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().Truncate(0).String()) -> `)
+    fmt.Println(qjson.U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().Truncate(0).String()))
     fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF") -> `)
     fmt.Println(qjson.U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF"))
 
