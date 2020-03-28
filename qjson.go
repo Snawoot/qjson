@@ -35,7 +35,7 @@ var EXAMPLE = []byte(`
 type SliceResizeNeeded uint64
 
 func NewSliceResizeNeeded(newsize uint64) SliceResizeNeeded {
-    return newsize
+    return SliceResizeNeeded(newsize)
 }
 
 func (e SliceResizeNeeded) Error() string {
@@ -138,7 +138,16 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
                 m[k] = tree
                 return nil, nil
             } else {
-                return u(m[k], keys[1:]...)
+                res, err := u(m[k], keys[1:]...)
+                if size, ok := err.(SliceResizeNeeded) ; ok {
+                    // Handle slice resize
+                    newslice := make([]interface{}, size)
+                    copy(newslice, m[k].([]interface{}))
+                    m[k] = newslice
+                    // Retry with resized array
+                    return u(m[k], keys[1:]...)
+                }
+                return res, err
             }
         }
     case int:
@@ -149,7 +158,7 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
         if l == 2 {
             // Reached path destination
             if k >= len(a) {
-                return nil, errors.New("Index out of range")
+                return nil, NewSliceResizeNeeded(uint64(k + 1))
             }
             old := a[k]
             a[k] = keys[1]
@@ -165,7 +174,16 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
                 a[k] = tree
                 return nil, nil
             } else {
-                return u(a[k], keys[1:]...)
+                res, err := u(a[k], keys[1:]...)
+                if size, ok := err.(SliceResizeNeeded) ; ok {
+                    // Handle slice resize
+                    newslice := make([]interface{}, size)
+                    copy(newslice, a[k].([]interface{}))
+                    a[k] = newslice
+                    // Retry with resized array
+                    return u(a[k], keys[1:]...)
+                }
+                return res, err
             }
         }
     default:
