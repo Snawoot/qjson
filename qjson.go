@@ -32,6 +32,16 @@ var EXAMPLE = []byte(`
 }
 `)
 
+type SliceResizeNeeded uint64
+
+func NewSliceResizeNeeded(newsize uint64) SliceResizeNeeded {
+    return newsize
+}
+
+func (e SliceResizeNeeded) Error() string {
+    return fmt.Sprintf("Slice needs to be at least %v elements long", e)
+}
+
 func S(keys ...interface{}) (interface{}, error) {
     if len(keys) == 0 {
         return nil, errors.New("No values passed")
@@ -200,15 +210,22 @@ func main() {
         panic(err)
     }
     fmt.Println("Example JSON:")
-    fmt.Println(string(EXAMPLE))
+    err = PrintJson(j)
+
+    // Query some JSON paths
     fmt.Println(`Q(j, "glossary", "title") ->`)
     fmt.Println(Q(j, "glossary", "title"))
     fmt.Println(`Q(j, "glossary", "non-existent-key") ->`)
     fmt.Println(Q(j, "glossary", "non-existent-key"))
     fmt.Println(`Q(j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1) ->`)
     fmt.Println(Q(j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1))
+
+    // Apply some changes to JSON
     fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC"))
     fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()))
+    fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF"))
+
+    fmt.Println("Edited JSON:")
     err = PrintJson(j)
     if err != nil {
         panic(err)
