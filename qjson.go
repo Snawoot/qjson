@@ -231,6 +231,10 @@ func main() {
     err = PrintJson(j)
 
     // Query some JSON paths
+    // Invocation: Q(object {}interface, path... interface{}, newvalue interface{})
+    // Returns value and error
+    fmt.Println("")
+    fmt.Println("Queries:")
     fmt.Println(`Q(j, "glossary", "title") ->`)
     fmt.Println(Q(j, "glossary", "title"))
     fmt.Println(`Q(j, "glossary", "non-existent-key") ->`)
@@ -239,8 +243,15 @@ func main() {
     fmt.Println(Q(j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1))
 
     // Apply some changes to JSON
+    // Invocation: U(object {}interface, path... interface{}, newvalue interface{})
+    // Returns old value and error
+    fmt.Println("")
+    fmt.Println("Updates:")
+    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC") -> `)
     fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 1, "ABC"))
+    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()) -> `)
     fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "meta", "updated", time.Now().String()))
+    fmt.Println(`U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF") -> `)
     fmt.Println(U(&j, "glossary", "GlossDiv", "GlossList", "GlossEntry", "GlossDef", "GlossSeeAlso", 4, "DEF"))
 
     fmt.Println("Edited JSON:")
