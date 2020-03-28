@@ -1,9 +1,8 @@
-// Helper routines for JSON manipulation in Go
+// Helper routines for JSON manipulation in Go.
 package qjson
 
 import (
     "fmt"
-    "errors"
 )
 
 type sliceResizeNeeded uint64
@@ -13,12 +12,61 @@ func newSliceResizeNeeded(newsize uint64) sliceResizeNeeded {
 }
 
 func (e sliceResizeNeeded) Error() string {
-    return fmt.Sprintf("Slice needs to be at least %v elements long", e)
+    return fmt.Sprintf("Slice needs to be at least %v elements long", int64(e))
+}
+
+// This error is returned when string key is not found in map.
+type KeyError string
+
+func newKeyError(key string) KeyError {
+    return KeyError(key)
+}
+
+func (e KeyError) Error() string {
+    return fmt.Sprintf("Key \"%s\" not found", string(e))
+}
+
+// This error is returned when array index is out of range.
+type IndexError int
+
+func newIndexError(index int) IndexError {
+    return IndexError(index)
+}
+
+func (e IndexError) Error() string {
+    return fmt.Sprintf("Index \"%d\" is out of range", int(e))
+}
+
+// Returns absent index value.
+func (e IndexError) Index() int {
+    return int(e)
+}
+
+// This error is returned in case when function parameters are incorrect.
+type ArgError string
+
+func newArgError(msg string) ArgError {
+    return ArgError(msg)
+}
+
+func (e ArgError) Error() string {
+    return string(e)
+}
+
+// This error is returned on mismatch of data types.
+type TypeError string
+
+func newTypeError(msg string) TypeError {
+    return TypeError(msg)
+}
+
+func (e TypeError) Error() string {
+    return string(e)
 }
 
 func s(keys ...interface{}) (interface{}, error) {
     if len(keys) == 0 {
-        return nil, errors.New("No values passed")
+        return nil, newArgError("No values passed")
     } else if len(keys) == 1 {
         return keys[0], nil
     }
@@ -34,7 +82,7 @@ func s(keys ...interface{}) (interface{}, error) {
         return m, nil
     case int:
         if k < 0 {
-            return nil, errors.New("Negative index is not allowed")
+            return nil, newArgError("Negative index is not allowed")
         }
         a := make([]interface{}, k+1)
         elem, err := s(keys[1:]...)
@@ -44,13 +92,13 @@ func s(keys ...interface{}) (interface{}, error) {
         a[k] = elem
         return a, nil
     default:
-        return nil, errors.New("Unknown key type")
+        return nil, newTypeError("Unknown key type")
     }
 }
 
-// Query some JSON paths
-// Invocation: Q(object {}interface, path... interface{}, newvalue interface{})
-// Returns value and error
+// Query some JSON paths.
+// Invocation: Q(object {}interface, path... interface{}, newvalue interface{}).
+// Returns value and error.
 func Q(V interface{}, keys ...interface{}) (interface{}, error) {
     if len(keys) == 0 {
         return V, nil
@@ -62,23 +110,23 @@ func Q(V interface{}, keys ...interface{}) (interface{}, error) {
     case string:
         v, ok := V.(map[string]interface{})
         if !ok {
-            return nil, errors.New("Bad container type: not a map")
+            return nil, newTypeError("Bad container type: not a map")
         }
         next, ok = v[k]
         if !ok {
-            return nil, errors.New("Key not found")
+            return nil, newKeyError(k)
         }
     case int:
         v, ok := V.([]interface{})
         if !ok {
-            return nil, errors.New("Bad container type: not an array")
+            return nil, newTypeError("Bad container type: not an array")
         }
-        if len(v) <= k {
-            return nil, errors.New("Index out of range")
+        if len(v) <= k || k < 0 {
+            return nil, newIndexError(k)
         }
         next = v[k]
     default:
-        return nil, errors.New("Unknown key type")
+        return nil, newTypeError("Unknown key type")
     }
     return Q(next, keys[1:]...)
 }
@@ -86,18 +134,18 @@ func Q(V interface{}, keys ...interface{}) (interface{}, error) {
 func u(V interface{}, keys ...interface{}) (interface{}, error) {
     if V == nil {
         // Should never happen if this function is called only by U()
-        return nil, errors.New("Can't update nil value")
+        return nil, newTypeError("Can't update nil value")
     }
     l := len(keys)
     if l < 2 {
-        return nil, errors.New("Incorrect arg length")
+        return nil, newArgError("Incorrect arg length")
     }
     key := keys[0]
     switch k := key.(type) {
     case string:
         m, ok := V.(map[string]interface{})
         if !ok {
-            return nil, errors.New("Container type mismatch")
+            return nil, newTypeError("Container type mismatch")
         }
         if l == 2 {
             // Reached path destination
@@ -130,7 +178,10 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
     case int:
         a, ok := V.([]interface{})
         if !ok {
-            return nil, errors.New("Container type mismatch")
+            return nil, newTypeError("Container type mismatch")
+        }
+        if k < 0 {
+            return nil, newIndexError(k)
         }
         if k >= len(a) {
             return nil, newSliceResizeNeeded(uint64(k + 1))
@@ -164,20 +215,20 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
             }
         }
     default:
-        return nil, errors.New("Unknown key type")
+        return nil, newTypeError("Unknown key type")
     }
 }
 
-// Apply some changes to JSON
-// Invocation: U(object {}interface, path... interface{}, newvalue interface{})
-// Returns old value and error
+// Apply some changes to JSON.
+// Invocation: U(object {}interface, path... interface{}, newvalue interface{}).
+// Returns old value and error.
 func U(V *interface{}, keys ...interface{}) (interface{}, error) {
     if V == nil {
-        return nil, errors.New("nil pointer dereference")
+        return nil, newArgError("nil pointer dereference")
     }
     l := len(keys)
     if l < 1 {
-        return nil, errors.New("Incorrect arg length")
+        return nil, newArgError("Incorrect arg length")
     } else if l == 1 {
         oldval := *V
         *V = keys[0]
