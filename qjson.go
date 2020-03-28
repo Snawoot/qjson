@@ -26,6 +26,11 @@ func (e KeyError) Error() string {
     return fmt.Sprintf("Key \"%s\" not found", string(e))
 }
 
+// Returns absent key name
+func (e KeyError) Key() string {
+    return string(e)
+}
+
 // This error is returned when array index is out of range.
 type IndexError int
 
