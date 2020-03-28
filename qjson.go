@@ -256,3 +256,85 @@ func U(V *interface{}, keys ...interface{}) (interface{}, error) {
         return res, err
     }
 }
+
+// Same as Q(), but asserts bool type for retrieved value. If type assertion failed
+// TypeError is returned.
+func QBool(V interface{}, keys ...interface{}) (bool, error) {
+    val, err := Q(V, keys...)
+    if err != nil {
+        return false, err
+    }
+    res, ok := val.(bool)
+    if !ok {
+        return false, newTypeError("Retrieved value is not a boolean")
+    }
+    return res, nil
+}
+
+// Same as Q(), but asserts float64 type for retrieved value. If type assertion failed
+// TypeError is returned.
+func QNumber(V interface{}, keys ...interface{}) (float64, error) {
+    val, err := Q(V, keys...)
+    if err != nil {
+        return 0, err
+    }
+    res, ok := val.(float64)
+    if !ok {
+        return 0, newTypeError("Retrieved value is not a number")
+    }
+    return res, nil
+}
+
+// Same as Q(), but asserts string type for retrieved value. If type assertion failed
+// TypeError is returned.
+func QString(V interface{}, keys ...interface{}) (string, error) {
+    val, err := Q(V, keys...)
+    if err != nil {
+        return "", err
+    }
+    res, ok := val.(string)
+    if !ok {
+        return "", newTypeError("Retrieved value is not a string")
+    }
+    return res, nil
+}
+
+// Same as Q(), but asserts []interface{} type for retrieved value. If type
+// assertion failed TypeError is returned.
+func QList(V interface{}, keys ...interface{}) ([]interface{}, error) {
+    val, err := Q(V, keys...)
+    if err != nil {
+        return nil, err
+    }
+    res, ok := val.([]interface{})
+    if !ok {
+        return nil, newTypeError("Retrieved value is not a list")
+    }
+    return res, nil
+}
+
+// Same as Q(), but asserts map[string]interface{} type for retrieved value. If type
+// assertion failed TypeError is returned.
+func QObject(V interface{}, keys ...interface{}) (map[string]interface{}, error) {
+    val, err := Q(V, keys...)
+    if err != nil {
+        return nil, err
+    }
+    res, ok := val.(map[string]interface{})
+    if !ok {
+        return nil, newTypeError("Retrieved value is not an object")
+    }
+    return res, nil
+}
+
+// Same as Q(), but checks if value is null. If not, TypeError is returned.
+func QNull(V interface{}, keys ...interface{}) error {
+    val, err := Q(V, keys...)
+    if err != nil {
+        return err
+    }
+    if val != nil {
+        return newTypeError("Retrieved value is not null")
+    }
+    return nil
+}

@@ -580,3 +580,122 @@ func TestInnerSubtreeConstructFail2(t *testing.T) {
     }
 }
 
+func TestQBool(t *testing.T) {
+    j := loadJSON(`[true, false, null, false]`, t)
+    b, err := QBool(j, 0)
+    if err != nil || !b {
+        t.Fail()
+    }
+    b, err = QBool(j, 1)
+    if err != nil || b {
+        t.Fail()
+    }
+    _, err = QBool(j, 4)
+    if err == nil {
+        t.Fail()
+    }
+    _, err = QBool(j, 2)
+    if _, ok := err.(TypeError) ; !ok {
+        t.Fail()
+    }
+}
+
+func TestQNumber(t *testing.T) {
+    j := loadJSON(`[0, 1, null, 3]`, t)
+    b, err := QNumber(j, 0)
+    if err != nil || b != 0 {
+        t.Fail()
+    }
+    b, err = QNumber(j, 1)
+    if err != nil || b != 1 {
+        t.Fail()
+    }
+    _, err = QNumber(j, 4)
+    if err == nil {
+        t.Fail()
+    }
+    _, err = QNumber(j, 2)
+    if _, ok := err.(TypeError) ; !ok {
+        t.Fail()
+    }
+}
+
+func TestQString(t *testing.T) {
+    j := loadJSON(`["0", "1", 2, "3"]`, t)
+    b, err := QString(j, 0)
+    if err != nil || b != "0" {
+        t.Fail()
+    }
+    b, err = QString(j, 1)
+    if err != nil || b != "1" {
+        t.Fail()
+    }
+    _, err = QString(j, 4)
+    if err == nil {
+        t.Fail()
+    }
+    _, err = QString(j, 2)
+    if _, ok := err.(TypeError) ; !ok {
+        t.Fail()
+    }
+}
+
+func TestQList(t *testing.T) {
+    j := loadJSON(`[[], [true], 2, [true,true,true]]`, t)
+    b, err := QList(j, 0)
+    if err != nil || len(b) != 0 {
+        t.Fail()
+    }
+    b, err = QList(j, 1)
+    if err != nil || len(b) != 1 {
+        t.Fail()
+    }
+    _, err = QList(j, 4)
+    if err == nil {
+        t.Fail()
+    }
+    _, err = QList(j, 2)
+    if _, ok := err.(TypeError) ; !ok {
+        t.Fail()
+    }
+}
+
+func TestQObject(t *testing.T) {
+    j := loadJSON(`[{}, {"a": true}, 2, {"a": true, "b":true, "c": true}]`, t)
+    b, err := QObject(j, 0)
+    if err != nil || len(b) != 0 {
+        t.Fail()
+    }
+    b, err = QObject(j, 1)
+    if err != nil || len(b) != 1 {
+        t.Fail()
+    }
+    _, err = QObject(j, 4)
+    if err == nil {
+        t.Fail()
+    }
+    _, err = QObject(j, 2)
+    if _, ok := err.(TypeError) ; !ok {
+        t.Fail()
+    }
+}
+
+func TestQNull(t *testing.T) {
+    j := loadJSON(`[null, null, 0, null]`, t)
+    err := QNull(j, 0)
+    if err != nil {
+        t.Fail()
+    }
+    err = QNull(j, 1)
+    if err != nil {
+        t.Fail()
+    }
+    err = QNull(j, 4)
+    if err == nil {
+        t.Fail()
+    }
+    err = QNull(j, 2)
+    if _, ok := err.(TypeError) ; !ok {
+        t.Fail()
+    }
+}
