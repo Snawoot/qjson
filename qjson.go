@@ -1,3 +1,5 @@
+// Helper routines for JSON manipulation in Go
+
 package qjson
 
 import (
@@ -15,6 +17,9 @@ func (e SliceResizeNeeded) Error() string {
     return fmt.Sprintf("Slice needs to be at least %v elements long", e)
 }
 
+// Query some JSON paths
+// Invocation: Q(object {}interface, path... interface{}, newvalue interface{})
+// Returns value and error
 func S(keys ...interface{}) (interface{}, error) {
     if len(keys) == 0 {
         return nil, errors.New("No values passed")
@@ -164,6 +169,9 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
     }
 }
 
+// Apply some changes to JSON
+// Invocation: U(object {}interface, path... interface{}, newvalue interface{})
+// Returns old value and error
 func U(V *interface{}, keys ...interface{}) (interface{}, error) {
     if V == nil {
         return nil, errors.New("nil pointer dereference")
