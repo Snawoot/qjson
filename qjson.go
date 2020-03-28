@@ -1,5 +1,4 @@
 // Helper routines for JSON manipulation in Go
-
 package qjson
 
 import (
@@ -7,20 +6,17 @@ import (
     "errors"
 )
 
-type SliceResizeNeeded uint64
+type sliceResizeNeeded uint64
 
-func NewSliceResizeNeeded(newsize uint64) SliceResizeNeeded {
-    return SliceResizeNeeded(newsize)
+func newSliceResizeNeeded(newsize uint64) sliceResizeNeeded {
+    return sliceResizeNeeded(newsize)
 }
 
-func (e SliceResizeNeeded) Error() string {
+func (e sliceResizeNeeded) Error() string {
     return fmt.Sprintf("Slice needs to be at least %v elements long", e)
 }
 
-// Query some JSON paths
-// Invocation: Q(object {}interface, path... interface{}, newvalue interface{})
-// Returns value and error
-func S(keys ...interface{}) (interface{}, error) {
+func s(keys ...interface{}) (interface{}, error) {
     if len(keys) == 0 {
         return nil, errors.New("No values passed")
     } else if len(keys) == 1 {
@@ -30,7 +26,7 @@ func S(keys ...interface{}) (interface{}, error) {
     switch k := key.(type) {
     case string:
         m := make(map[string]interface{})
-        elem, err := S(keys[1:]...)
+        elem, err := s(keys[1:]...)
         if err != nil {
             return nil, err
         }
@@ -41,7 +37,7 @@ func S(keys ...interface{}) (interface{}, error) {
             return nil, errors.New("Negative index is not allowed")
         }
         a := make([]interface{}, k+1)
-        elem, err := S(keys[1:]...)
+        elem, err := s(keys[1:]...)
         if err != nil {
             return nil, err
         }
@@ -52,6 +48,9 @@ func S(keys ...interface{}) (interface{}, error) {
     }
 }
 
+// Query some JSON paths
+// Invocation: Q(object {}interface, path... interface{}, newvalue interface{})
+// Returns value and error
 func Q(V interface{}, keys ...interface{}) (interface{}, error) {
     if len(keys) == 0 {
         return V, nil
@@ -109,7 +108,7 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
             // Follow next container
             if m[k] == nil {
                 // Recreate subtree
-                tree, err := S(keys[1:]...)
+                tree, err := s(keys[1:]...)
                 if err != nil {
                     return nil, err
                 }
@@ -117,7 +116,7 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
                 return nil, nil
             } else {
                 res, err := u(m[k], keys[1:]...)
-                if size, ok := err.(SliceResizeNeeded) ; ok {
+                if size, ok := err.(sliceResizeNeeded) ; ok {
                     // Handle slice resize
                     newslice := make([]interface{}, size)
                     copy(newslice, m[k].([]interface{}))
@@ -134,7 +133,7 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
             return nil, errors.New("Container type mismatch")
         }
         if k >= len(a) {
-            return nil, NewSliceResizeNeeded(uint64(k + 1))
+            return nil, newSliceResizeNeeded(uint64(k + 1))
         }
         if l == 2 {
             // Reached path destination
@@ -145,7 +144,7 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
             // Follow next container
             if a[k] == nil {
                 // Recreate subtree
-                tree, err := S(keys[1:]...)
+                tree, err := s(keys[1:]...)
                 if err != nil {
                     return nil, err
                 }
@@ -153,7 +152,7 @@ func u(V interface{}, keys ...interface{}) (interface{}, error) {
                 return nil, nil
             } else {
                 res, err := u(a[k], keys[1:]...)
-                if size, ok := err.(SliceResizeNeeded) ; ok {
+                if size, ok := err.(sliceResizeNeeded) ; ok {
                     // Handle slice resize
                     newslice := make([]interface{}, size)
                     copy(newslice, a[k].([]interface{}))
@@ -185,12 +184,12 @@ func U(V *interface{}, keys ...interface{}) (interface{}, error) {
         return oldval, nil
     } else {
         if *V == nil {
-            tree, err := S(keys...)
+            tree, err := s(keys...)
             *V = tree
             return nil, err
         }
         res, err := u(*V, keys...)
-        if size, ok := err.(SliceResizeNeeded) ; ok {
+        if size, ok := err.(sliceResizeNeeded) ; ok {
             // Handle slice resize
             newslice := make([]interface{}, size)
             copy(newslice, (*V).([]interface{}))
